@@ -164,7 +164,7 @@ const updateDashboard = () => {
       exportRateElement.textContent = formatRate(currentPeriod.fit);
     }
     if (noteBoxElement) {
-      noteBoxElement.textContent = currentPeriod.note;
+      noteBoxElement.textContent = `${currentPeriod.note} Daily supply charge is A$1.39. During ZeroHero time (6-9pm), you can receive a A$1 credit for avoiding grid power.`;
     }
 
     if (usageBox && exportBox) {
