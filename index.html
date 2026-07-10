@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GloBird ZeroHero Live Tracker</title>
+    <link rel="stylesheet" href="styles/globird-tracker.css">
+</head>
+<body>
+
+    <div class="container">
+        <!-- Top Status Dashboard -->
+        <div class="card">
+            <h1>GloBird ZeroHero Status</h1>
+            <div id="currentTime" class="time-display">Loading current time...</div>
+            
+            <div class="rate-container">
+                <div id="usageBox" class="rate-box">
+                    <div class="label">Usage Rate (You Pay)</div>
+                    <div id="usageRate" class="value">-</div>
+                </div>
+                <div id="exportBox" class="rate-box">
+                    <div class="label">Solar Export (FiT)</div>
+                    <div id="exportRate" class="value">-</div>
+                </div>
+            </div>
+
+            <div id="noteBox" class="note-box">
+                Loading window strategies...
+            </div>
+        </div>
+
+        <!-- Schedule Table -->
+        <div class="card table-card">
+            <h2>Daily Schedule Details</h2>
+            <table id="scheduleTable">
+                <thead>
+                    <tr>
+                        <th>Time Period</th>
+                        <th>Rate Window</th>
+                        <th>Usage (Pay)</th>
+                        <th>Export (Earn)</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleBody">
+                    <!-- Rows injected by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="scripts/globird-tracker.js"></script>
+</body>
+</html>
