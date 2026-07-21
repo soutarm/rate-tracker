@@ -1,14 +1,13 @@
 "use strict";
 
-const formatRate = (rate) => {
-  const formattedAmount = new Intl.NumberFormat("en-AU", {
+const formatCentsValue = (rate) =>
+  new Intl.NumberFormat("en-AU", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
     useGrouping: false
   }).format(rate * 100);
 
-  return `<strong>${formattedAmount}¢</strong><span class="unit">/kWh</span>`;
-};
+const formatRate = (rate) => `<strong>${formatCentsValue(rate)}¢</strong><span class="unit">/kWh</span>`;
 
 // Data structure driving both the dashboard and the table
 const periods = [
@@ -84,6 +83,215 @@ const periods = [
   }
 ];
 
+// ---- 24-Hour Rate Chart (time on the Y axis, midnight to midnight) ----
+
+const CHART_CONFIG = {
+  width: 640,
+  height: 340,
+  margin: { top: 28, right: 20, bottom: 36, left: 54 }
+};
+
+// Splits any period crossing midnight into two segments so the chart can be
+// drawn as a single continuous 0-24 hour timeline.
+const buildDaySegments = (allPeriods) => {
+  const segments = [];
+  allPeriods.forEach((period) => {
+    if (period.start > period.end) {
+      segments.push({ ...period, start: period.start, end: 24 });
+      segments.push({ ...period, start: 0, end: period.end });
+    } else {
+      segments.push({ ...period });
+    }
+  });
+  return segments.sort((a, b) => a.start - b.start);
+};
+
+const daySegments = buildDaySegments(periods);
+
+const maxRateCents = Math.max(...periods.flatMap((period) => [period.usage, period.fit])) * 100;
+const rateAxisMaxCents = Math.max(40, Math.ceil(maxRateCents / 10) * 10);
+
+const plotLeft = CHART_CONFIG.margin.left;
+const plotRight = CHART_CONFIG.width - CHART_CONFIG.margin.right;
+const plotTop = CHART_CONFIG.margin.top;
+const plotBottom = CHART_CONFIG.height - CHART_CONFIG.margin.bottom;
+const plotWidth = plotRight - plotLeft;
+const plotHeight = plotBottom - plotTop;
+
+const xForHour = (hour) => plotLeft + (hour / 24) * plotWidth;
+const yForCents = (cents) => plotBottom - (cents / rateAxisMaxCents) * plotHeight;
+
+const getFractionalHour = (date) => date.getHours() + date.getMinutes() / 60 + date.getSeconds() / 3600;
+
+const formatHourTick = (hour) => {
+  const tickDate = new Date();
+  tickDate.setHours(hour, 0, 0, 0);
+  return tickDate.toLocaleTimeString("en-AU", { hour: "numeric", hour12: true });
+};
+
+const formatTimeOfDay = (hourDecimal) => {
+  const tickDate = new Date();
+  const hours = Math.floor(hourDecimal) % 24;
+  const minutes = Math.round((hourDecimal - Math.floor(hourDecimal)) * 60);
+  tickDate.setHours(hours, minutes, 0, 0);
+  return tickDate.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit", hour12: true });
+};
+
+const findSegmentForHour = (hourDecimal) =>
+  daySegments.find((segment) => hourDecimal >= segment.start && hourDecimal < segment.end) ||
+  daySegments[daySegments.length - 1];
+
+// Consecutive points at a shared boundary hour naturally form the step's
+// vertical "jump" between one rate and the next.
+const buildStepPoints = (key) => {
+  const points = [];
+  daySegments.forEach((segment) => {
+    const y = yForCents(segment[key] * 100);
+    points.push([xForHour(segment.start), y]);
+    points.push([xForHour(segment.end), y]);
+  });
+  return points;
+};
+
+const pointsToPath = (points) => `M ${points.map(([x, y]) => `${x},${y}`).join(" L ")}`;
+
+const BAND_FILL = {
+  free: "var(--band-free)",
+  peak: "var(--band-peak)"
+};
+
+const renderChart = () => {
+  const svg = document.getElementById("rateChart");
+  if (!svg) return;
+
+  const bands = daySegments
+    .filter((segment) => BAND_FILL[segment.type])
+    .map((segment) => {
+      const x = xForHour(segment.start);
+      const width = xForHour(segment.end) - x;
+      return `<rect class="chart-band" x="${x}" y="${plotTop}" width="${width}" height="${plotHeight}" fill="${BAND_FILL[segment.type]}"></rect>`;
+    })
+    .join("");
+
+  const hourTicks = [0, 3, 6, 9, 12, 15, 18, 21, 24];
+  const hourGridlines = hourTicks
+    .map((hour) => {
+      const x = xForHour(hour);
+      return `<line class="chart-gridline" x1="${x}" y1="${plotTop}" x2="${x}" y2="${plotBottom}"></line>`;
+    })
+    .join("");
+  const hourLabels = hourTicks
+    .map((hour) => {
+      const x = xForHour(hour);
+      return `<text class="chart-axis-label chart-axis-label--time" x="${x}" y="${plotBottom + 18}" text-anchor="middle">${formatHourTick(hour % 24)}</text>`;
+    })
+    .join("");
+
+  const rateTicks = Array.from({ length: rateAxisMaxCents / 10 + 1 }, (_, i) => i * 10);
+  const rateGridlines = rateTicks
+    .map((cents) => {
+      const y = yForCents(cents);
+      return `<line class="chart-gridline" x1="${plotLeft}" y1="${y}" x2="${plotRight}" y2="${y}"></line>`;
+    })
+    .join("");
+  const rateLabels = rateTicks
+    .map((cents) => {
+      const y = yForCents(cents);
+      return `<text class="chart-axis-label" x="${plotLeft - 8}" y="${y}" dominant-baseline="middle" text-anchor="end">${cents}&#162;</text>`;
+    })
+    .join("");
+
+  const usagePath = pointsToPath(buildStepPoints("usage"));
+  const fitPath = pointsToPath(buildStepPoints("fit"));
+
+  svg.innerHTML = `
+    ${bands}
+    ${hourGridlines}
+    ${rateGridlines}
+    <line class="chart-axis" x1="${plotLeft}" y1="${plotBottom}" x2="${plotRight}" y2="${plotBottom}"></line>
+    <line class="chart-axis" x1="${plotLeft}" y1="${plotTop}" x2="${plotLeft}" y2="${plotBottom}"></line>
+    ${hourLabels}
+    ${rateLabels}
+    <path id="usageLine" class="chart-line chart-line--usage" d="${usagePath}"></path>
+    <path id="fitLine" class="chart-line chart-line--fit" d="${fitPath}"></path>
+    <line id="crosshairLine" class="chart-crosshair" x1="0" y1="${plotTop}" x2="0" y2="${plotBottom}"></line>
+    <line id="nowLine" class="chart-now-line" x1="0" y1="${plotTop}" x2="0" y2="${plotBottom}"></line>
+    <circle id="nowMarkerUsage" class="chart-now-marker chart-now-marker--usage" r="5" cx="0" cy="0"></circle>
+    <circle id="nowMarkerFit" class="chart-now-marker chart-now-marker--fit" r="5" cx="0" cy="0"></circle>
+    <text id="nowLabel" class="chart-now-label" x="0" y="${plotTop - 10}" text-anchor="middle"></text>
+    <g id="chartTooltip" class="chart-tooltip" visibility="hidden">
+      <rect class="chart-tooltip-bg" x="0" y="0" width="140" height="56" rx="6"></rect>
+      <text class="chart-tooltip-time" x="10" y="18"></text>
+      <text class="chart-tooltip-usage" x="10" y="34"></text>
+      <text class="chart-tooltip-fit" x="10" y="50"></text>
+    </g>
+    <rect id="chartOverlay" class="chart-overlay" x="${plotLeft}" y="${plotTop}" width="${plotWidth}" height="${plotHeight}" fill="transparent"></rect>
+  `;
+
+  const overlay = document.getElementById("chartOverlay");
+  overlay.addEventListener("pointermove", handleChartHover);
+  overlay.addEventListener("pointerleave", hideChartHover);
+};
+
+const handleChartHover = (event) => {
+  const svg = document.getElementById("rateChart");
+  const crosshairLine = document.getElementById("crosshairLine");
+  const tooltip = document.getElementById("chartTooltip");
+  if (!svg || !crosshairLine || !tooltip) return;
+
+  const point = svg.createSVGPoint();
+  point.x = event.clientX;
+  point.y = event.clientY;
+  const svgPoint = point.matrixTransform(svg.getScreenCTM().inverse());
+
+  const hourDecimal = Math.min(24, Math.max(0, ((svgPoint.x - plotLeft) / plotWidth) * 24));
+  const x = xForHour(hourDecimal);
+  const segment = findSegmentForHour(hourDecimal);
+
+  crosshairLine.setAttribute("x1", x);
+  crosshairLine.setAttribute("x2", x);
+  crosshairLine.setAttribute("visibility", "visible");
+
+  const tooltipX = Math.min(Math.max(x - 70, plotLeft), plotRight - 140);
+  const tooltipY = plotTop + 8;
+
+  tooltip.setAttribute("transform", `translate(${tooltipX}, ${tooltipY})`);
+  tooltip.setAttribute("visibility", "visible");
+  tooltip.querySelector(".chart-tooltip-time").textContent = formatTimeOfDay(hourDecimal);
+  tooltip.querySelector(".chart-tooltip-usage").textContent = `Usage: ${formatCentsValue(segment.usage)}¢/kWh`;
+  tooltip.querySelector(".chart-tooltip-fit").textContent = `Export: ${formatCentsValue(segment.fit)}¢/kWh`;
+};
+
+const hideChartHover = () => {
+  const crosshairLine = document.getElementById("crosshairLine");
+  const tooltip = document.getElementById("chartTooltip");
+  if (crosshairLine) crosshairLine.setAttribute("visibility", "hidden");
+  if (tooltip) tooltip.setAttribute("visibility", "hidden");
+};
+
+const updateChartNow = (now) => {
+  const nowLine = document.getElementById("nowLine");
+  const nowLabel = document.getElementById("nowLabel");
+  const nowMarkerUsage = document.getElementById("nowMarkerUsage");
+  const nowMarkerFit = document.getElementById("nowMarkerFit");
+  if (!nowLine || !nowLabel || !nowMarkerUsage || !nowMarkerFit) return;
+
+  const hourDecimal = getFractionalHour(now);
+  const x = xForHour(hourDecimal);
+  const segment = findSegmentForHour(hourDecimal);
+
+  nowLine.setAttribute("x1", x);
+  nowLine.setAttribute("x2", x);
+
+  nowLabel.setAttribute("x", Math.min(Math.max(x, plotLeft + 32), plotRight - 32));
+  nowLabel.textContent = formatTimeOfDay(hourDecimal);
+
+  nowMarkerUsage.setAttribute("cx", x);
+  nowMarkerUsage.setAttribute("cy", yForCents(segment.usage * 100));
+  nowMarkerFit.setAttribute("cx", x);
+  nowMarkerFit.setAttribute("cy", yForCents(segment.fit * 100));
+};
+
 // Initialize Table
 const initializeTable = () => {
   const tbody = document.getElementById("scheduleBody");
@@ -115,6 +323,8 @@ const initializeTable = () => {
 const updateDashboard = () => {
   const now = new Date();
   const hourNow = now.getHours();
+
+  updateChartNow(now);
 
   const timeOptions = {
     hour: "numeric",
@@ -181,6 +391,7 @@ const updateDashboard = () => {
 
 document.addEventListener("DOMContentLoaded", () => {
   initializeTable();
+  renderChart();
   updateDashboard();
   setInterval(updateDashboard, 1000);
 });

@@ -117,7 +117,161 @@ h2 {
   line-height: 1.5;
 }
 
+/* 24-Hour Rate Chart */
+.chart-card {
+  --series-usage: #2a78d6;
+  --series-fit: #1baf7a;
+  --now-line: #e53e3e;
+  --band-free: #e6fffa;
+  --band-peak: #fff5f5;
+}
+
+.chart-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+#rateChart {
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  display: block;
+}
+
+.chart-band {
+  pointer-events: none;
+}
+
+.chart-gridline {
+  stroke: #e2e8f0;
+  stroke-width: 1;
+}
+
+.chart-axis {
+  stroke: #a0aec0;
+  stroke-width: 1;
+}
+
+.chart-axis-label {
+  font-size: 11px;
+  fill: #718096;
+}
+
+.chart-axis-label--time {
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.chart-line--usage {
+  stroke: var(--series-usage);
+}
+
+.chart-line--fit {
+  stroke: var(--series-fit);
+}
+
+.chart-now-line {
+  stroke: var(--now-line);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+.chart-now-label {
+  font-size: 11px;
+  font-weight: bold;
+  fill: var(--now-line);
+}
+
+.chart-now-marker {
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.chart-now-marker--usage {
+  fill: var(--series-usage);
+}
+
+.chart-now-marker--fit {
+  fill: var(--series-fit);
+}
+
+.chart-crosshair {
+  stroke: #a0aec0;
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.chart-overlay {
+  cursor: crosshair;
+  pointer-events: all;
+}
+
+.chart-tooltip {
+  pointer-events: none;
+}
+
+.chart-tooltip-bg {
+  fill: #2d3748;
+  opacity: 0.95;
+}
+
+.chart-tooltip-time,
+.chart-tooltip-usage,
+.chart-tooltip-fit {
+  fill: #ffffff;
+  font-size: 11px;
+}
+
+.chart-tooltip-time {
+  font-weight: bold;
+}
+
+.chart-legend {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #4a5568;
+}
+
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart-legend-swatch {
+  width: 16px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.chart-legend-swatch--usage {
+  background: var(--series-usage);
+}
+
+.chart-legend-swatch--fit {
+  background: var(--series-fit);
+}
+
+.chart-legend-swatch--now {
+  background-image: repeating-linear-gradient(to right, var(--now-line) 0, var(--now-line) 4px, transparent 4px, transparent 7px);
+}
+
 /* Table Styles */
+.table-wrapper {
+  overflow-x: auto;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

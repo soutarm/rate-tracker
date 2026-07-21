@@ -36,19 +36,33 @@
         <!-- Schedule Table -->
         <div class="card table-card">
             <h2>Daily Schedule Details</h2>
-            <table id="scheduleTable">
-                <thead>
-                    <tr>
-                        <th>Time Period</th>
-                        <th>Rate Window</th>
-                        <th>Usage (Pay)</th>
-                        <th>Export (Earn)</th>
-                    </tr>
-                </thead>
-                <tbody id="scheduleBody">
-                    <!-- Rows injected by JavaScript -->
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table id="scheduleTable">
+                    <thead>
+                        <tr>
+                            <th>Time Period</th>
+                            <th>Rate Window</th>
+                            <th>Usage (Pay)</th>
+                            <th>Export (Earn)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduleBody">
+                        <!-- Rows injected by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 24-Hour Rate Chart -->
+        <div class="card chart-card">
+            <div class="chart-wrapper">
+                <svg id="rateChart" viewBox="0 0 640 340" role="img" aria-label="Line chart of usage and export rates across the 24-hour cycle, midnight to midnight, with the current time marked"></svg>
+            </div>
+            <div class="chart-legend">
+                <div class="chart-legend-item"><span class="chart-legend-swatch chart-legend-swatch--usage"></span>Usage Rate (You Pay)</div>
+                <div class="chart-legend-item"><span class="chart-legend-swatch chart-legend-swatch--fit"></span>Solar Export (FiT)</div>
+                <div class="chart-legend-item"><span class="chart-legend-swatch chart-legend-swatch--now"></span>Current time</div>
+            </div>
         </div>
     </div>
 
