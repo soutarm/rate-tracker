@@ -99,6 +99,13 @@ h2 {
   color: #e53e3e;
 }
 
+.unit {
+  font-size: 0.7em;
+  font-weight: normal;
+  opacity: 0.6;
+  margin-left: 2px;
+}
+
 .note-box {
   background: #ebf8ff;
   border-left: 4px solid #3182ce;
@@ -134,6 +141,13 @@ th {
 
 tbody tr:nth-child(even) {
   background-color: #f8fafc;
+}
+
+th:nth-child(3),
+th:nth-child(4),
+td:nth-child(3),
+td:nth-child(4) {
+  text-align: right;
 }
 
 /* Active Row Styling */

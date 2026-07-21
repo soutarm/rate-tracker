@@ -2,12 +2,12 @@
 
 const formatRate = (rate) => {
   const formattedAmount = new Intl.NumberFormat("en-AU", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 3,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
     useGrouping: false
-  }).format(rate);
+  }).format(rate * 100);
 
-  return `A$${formattedAmount}/kWh`;
+  return `<strong>${formattedAmount}¢</strong><span class="unit">/kWh</span>`;
 };
 
 // Data structure driving both the dashboard and the table
@@ -158,10 +158,10 @@ const updateDashboard = () => {
       timeElement.textContent = `Current Time: ${timeString} (${currentPeriod.name})`;
     }
     if (usageRateElement) {
-      usageRateElement.textContent = formatRate(currentPeriod.usage);
+      usageRateElement.innerHTML = formatRate(currentPeriod.usage);
     }
     if (exportRateElement) {
-      exportRateElement.textContent = formatRate(currentPeriod.fit);
+      exportRateElement.innerHTML = formatRate(currentPeriod.fit);
     }
     if (noteBoxElement) {
       noteBoxElement.textContent = `${currentPeriod.note} Daily supply charge is A$1.39. During ZeroHero time (6-9pm), you can receive a A$1 credit for avoiding grid power.`;
