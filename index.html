@@ -13,10 +13,9 @@
 
     <div class="container">
         <!-- Top Status Dashboard -->
-        <div class="card">
-            <h1>GloBird ZeroHero Status</h1>
-            <div id="currentTime" class="time-display">Loading current time...</div>
-            
+        <div class="card dashboard-card">
+            <h1 id="pageTitle">GloBird ZeroHero Status</h1>
+
             <div class="rate-container">
                 <div id="usageBox" class="rate-box">
                     <div class="label">Usage Rate (You Pay)</div>
@@ -27,23 +26,18 @@
                     <div id="exportRate" class="value">-</div>
                 </div>
             </div>
-
-            <div id="noteBox" class="note-box">
-                Loading window strategies...
-            </div>
         </div>
 
         <!-- Schedule Table -->
         <div class="card table-card">
-            <h2>Daily Schedule Details</h2>
             <div class="table-wrapper">
                 <table id="scheduleTable">
                     <thead>
                         <tr>
                             <th>Time Period</th>
                             <th>Rate Window</th>
-                            <th>Usage (Pay)</th>
-                            <th>Export (Earn)</th>
+                            <th>Usage</th>
+                            <th>Export</th>
                         </tr>
                     </thead>
                     <tbody id="scheduleBody">
@@ -63,6 +57,10 @@
                 <div class="chart-legend-item"><span class="chart-legend-swatch chart-legend-swatch--fit"></span>Solar Export (FiT)</div>
                 <div class="chart-legend-item"><span class="chart-legend-swatch chart-legend-swatch--now"></span>Current time</div>
             </div>
+        </div>
+
+        <div id="noteBox" class="note-box">
+            Loading window strategies...
         </div>
     </div>
 

@@ -326,14 +326,6 @@ const updateDashboard = () => {
 
   updateChartNow(now);
 
-  const timeOptions = {
-    hour: "numeric",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true
-  };
-  const timeString = now.toLocaleTimeString("en-AU", timeOptions);
-
   let currentPeriod = null;
 
   // Find current period and update table highlighting
@@ -357,15 +349,15 @@ const updateDashboard = () => {
 
   // Update top dashboard elements
   if (currentPeriod) {
-    const timeElement = document.getElementById("currentTime");
+    const pageTitleElement = document.getElementById("pageTitle");
     const usageRateElement = document.getElementById("usageRate");
     const exportRateElement = document.getElementById("exportRate");
     const noteBoxElement = document.getElementById("noteBox");
     const usageBox = document.getElementById("usageBox");
     const exportBox = document.getElementById("exportBox");
 
-    if (timeElement) {
-      timeElement.textContent = `Current Time: ${timeString} (${currentPeriod.name})`;
+    if (pageTitleElement) {
+      pageTitleElement.textContent = `GloBird ZeroHero ${currentPeriod.name}`;
     }
     if (usageRateElement) {
       usageRateElement.innerHTML = formatRate(currentPeriod.usage);
