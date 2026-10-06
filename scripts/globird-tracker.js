@@ -134,7 +134,7 @@ const PLANS = {
   globird: {
     id: "globird",
     brand: "GloBird ZeroHero",
-    pageTitle: "GloBird ZeroHero Live Tracker",
+    pageTitle: "Power Rate Tracker",
     periods: globirdPeriods,
     footnote:
       "Daily supply charge is A$1.39. During ZeroHero time (6-9pm), you can receive a A$1 credit for avoiding grid power."
@@ -142,7 +142,7 @@ const PLANS = {
   powershop: {
     id: "powershop",
     brand: "Powershop EV Day",
-    pageTitle: "Powershop EV Day Live Tracker",
+    pageTitle: "Power Rate Tracker",
     periods: powershopPeriods,
     footnote:
       "Daily supply charge is A$1.21. Controlled load usage is 22.11\u00a2/kWh and is excluded from the $0 Super Off Peak rate. Rates include GST."
