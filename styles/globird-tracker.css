@@ -344,3 +344,46 @@ tbody tr.active-row td:last-child {
   background: #e2e8f0;
   color: #2d3748;
 }
+
+/* Plan Toggle */
+.plan-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 20px;
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+.plan-toggle-btn {
+  flex: 1;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #4a5568;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.plan-toggle-btn:hover {
+  color: #1a202c;
+}
+
+.plan-toggle-btn:focus-visible {
+  outline: 2px solid #3182ce;
+  outline-offset: 2px;
+}
+
+.plan-toggle-btn[aria-pressed="true"] {
+  background: #ffffff;
+  color: #1a202c;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.badge-shoulder {
+  background: #feebc8;
+  color: #7b341e;
+}

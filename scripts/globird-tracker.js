@@ -9,8 +9,8 @@ const formatCentsValue = (rate) =>
 
 const formatRate = (rate) => `<strong>${formatCentsValue(rate)}¢</strong><span class="unit">/kWh</span>`;
 
-// Data structure driving both the dashboard and the table
-const periods = [
+// GloBird ZeroHero periods
+const globirdPeriods = [
   {
     start: 23,
     end: 10,
@@ -83,6 +83,72 @@ const periods = [
   }
 ];
 
+// Powershop EV Day periods (Mon to Sun, inc. GST). Source: Pricing Statement, 1 October 2026, AusNet distributor.
+const powershopPeriods = [
+  {
+    start: 21,
+    end: 11,
+    timeLabel: "9:00 PM to 11:00 AM",
+    name: "Off Peak",
+    usage: 0.2068,
+    fit: 0.01,
+    type: "standard",
+    note: "Off Peak window. Good time for EV charging and general household use outside the free window."
+  },
+  {
+    start: 11,
+    end: 15,
+    timeLabel: "11:00 AM to 3:00 PM",
+    name: "Super Off Peak",
+    usage: 0,
+    fit: 0.01,
+    type: "free",
+    note: "Super Off Peak: usage is free. Charge the EV and run heavy appliances now (subject to the Fair Use Policy)."
+  },
+  {
+    start: 15,
+    end: 16,
+    timeLabel: "3:00 PM to 4:00 PM",
+    name: "Shoulder",
+    usage: 0.1921,
+    fit: 0.01,
+    type: "shoulder",
+    note: "Shoulder window. Finish up heavy loads before peak pricing begins at 4:00 PM."
+  },
+  {
+    start: 16,
+    end: 21,
+    timeLabel: "4:00 PM to 9:00 PM",
+    name: "Peak",
+    usage: 0.495,
+    fit: 0.01,
+    type: "peak",
+    note: "Peak window at the highest rate of the day. Shift discretionary loads out of 4:00 PM to 9:00 PM."
+  }
+];
+
+const DEFAULT_PLAN_ID = "globird";
+const PLAN_STORAGE_KEY = "rateTracker.plan";
+
+const PLANS = {
+  globird: {
+    id: "globird",
+    brand: "GloBird ZeroHero",
+    pageTitle: "GloBird ZeroHero Live Tracker",
+    periods: globirdPeriods,
+    footnote:
+      "Daily supply charge is A$1.39. During ZeroHero time (6-9pm), you can receive a A$1 credit for avoiding grid power."
+  },
+  powershop: {
+    id: "powershop",
+    brand: "Powershop EV Day",
+    pageTitle: "Powershop EV Day Live Tracker",
+    periods: powershopPeriods,
+    footnote:
+      "Daily supply charge is A$1.21. Controlled load usage is 22.11\u00a2/kWh and is excluded from the $0 Super Off Peak rate. Rates include GST."
+  }
+};
+
 // ---- 24-Hour Rate Chart (time on the Y axis, midnight to midnight) ----
 
 const CHART_CONFIG = {
@@ -106,10 +172,25 @@ const buildDaySegments = (allPeriods) => {
   return segments.sort((a, b) => a.start - b.start);
 };
 
-const daySegments = buildDaySegments(periods);
+const computeAxisMax = (planPeriods) => {
+  const maxRateCents = Math.max(...planPeriods.flatMap((period) => [period.usage, period.fit])) * 100;
+  return Math.max(40, Math.ceil(maxRateCents / 10) * 10);
+};
 
-const maxRateCents = Math.max(...periods.flatMap((period) => [period.usage, period.fit])) * 100;
-const rateAxisMaxCents = Math.max(40, Math.ceil(maxRateCents / 10) * 10);
+const readSavedPlanId = () => {
+  try {
+    const saved = window.localStorage.getItem(PLAN_STORAGE_KEY);
+    return PLANS[saved] ? saved : DEFAULT_PLAN_ID;
+  } catch {
+    // Storage unavailable (private mode, blocked); fall back to the default plan.
+    return DEFAULT_PLAN_ID;
+  }
+};
+
+let activePlan = PLANS[readSavedPlanId()];
+let periods = activePlan.periods;
+let daySegments = buildDaySegments(periods);
+let rateAxisMaxCents = computeAxisMax(periods);
 
 const plotLeft = CHART_CONFIG.margin.left;
 const plotRight = CHART_CONFIG.width - CHART_CONFIG.margin.right;
@@ -295,6 +376,7 @@ const updateChartNow = (now) => {
 // Initialize Table
 const initializeTable = () => {
   const tbody = document.getElementById("scheduleBody");
+  tbody.innerHTML = "";
 
   periods.forEach((period, index) => {
     const row = document.createElement("tr");
@@ -305,6 +387,8 @@ const initializeTable = () => {
       typeBadge = '<span class="badge badge-free">FREE</span>';
     } else if (period.type === "peak") {
       typeBadge = '<span class="badge badge-peak">PEAK</span>';
+    } else if (period.type === "shoulder") {
+      typeBadge = '<span class="badge badge-shoulder">SHOULDER</span>';
     } else {
       typeBadge = '<span class="badge badge-standard">OFF-PEAK</span>';
     }
@@ -357,7 +441,7 @@ const updateDashboard = () => {
     const exportBox = document.getElementById("exportBox");
 
     if (pageTitleElement) {
-      pageTitleElement.textContent = `GloBird ZeroHero ${currentPeriod.name}`;
+      pageTitleElement.textContent = `${activePlan.brand} ${currentPeriod.name}`;
     }
     if (usageRateElement) {
       usageRateElement.innerHTML = formatRate(currentPeriod.usage);
@@ -366,7 +450,7 @@ const updateDashboard = () => {
       exportRateElement.innerHTML = formatRate(currentPeriod.fit);
     }
     if (noteBoxElement) {
-      noteBoxElement.textContent = `${currentPeriod.note} Daily supply charge is A$1.39. During ZeroHero time (6-9pm), you can receive a A$1 credit for avoiding grid power.`;
+      noteBoxElement.textContent = `${currentPeriod.note} ${activePlan.footnote}`;
     }
 
     if (usageBox && exportBox) {
@@ -381,9 +465,38 @@ const updateDashboard = () => {
   }
 };
 
-document.addEventListener("DOMContentLoaded", () => {
+const syncToggle = () => {
+  document.querySelectorAll(".plan-toggle-btn").forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.plan === activePlan.id));
+  });
+};
+
+const selectPlan = (planId) => {
+  const plan = PLANS[planId];
+  if (!plan) return;
+
+  activePlan = plan;
+  periods = plan.periods;
+  daySegments = buildDaySegments(periods);
+  rateAxisMaxCents = computeAxisMax(periods);
+  document.title = plan.pageTitle;
+
+  try {
+    window.localStorage.setItem(PLAN_STORAGE_KEY, plan.id);
+  } catch {
+    // Storage unavailable; the selection just will not persist between visits.
+  }
+
+  syncToggle();
   initializeTable();
   renderChart();
   updateDashboard();
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".plan-toggle-btn").forEach((button) => {
+    button.addEventListener("click", () => selectPlan(button.dataset.plan));
+  });
+  selectPlan(activePlan.id);
   setInterval(updateDashboard, 1000);
 });

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GloBird ZeroHero Live Tracker</title>
+    <title>Rate Tracker</title>
     <link rel="icon" href="https://www.globirdenergy.com.au/wp-content/uploads/2025/01/favicon-150x150.png" sizes="32x32">
     <link rel="icon" href="https://www.globirdenergy.com.au/wp-content/uploads/2025/01/favicon.png" sizes="192x192">
     <link rel="apple-touch-icon" href="https://www.globirdenergy.com.au/wp-content/uploads/2025/01/favicon.png">
@@ -12,9 +12,15 @@
 <body>
 
     <div class="container">
+        <!-- Plan Toggle -->
+        <div class="plan-toggle" role="group" aria-label="Select rate plan">
+            <button type="button" class="plan-toggle-btn" data-plan="globird" aria-pressed="true">GloBird ZeroHero</button>
+            <button type="button" class="plan-toggle-btn" data-plan="powershop" aria-pressed="false">Powershop EV Day</button>
+        </div>
+
         <!-- Top Status Dashboard -->
         <div class="card dashboard-card">
-            <h1 id="pageTitle">GloBird ZeroHero Status</h1>
+            <h1 id="pageTitle">Rate Status</h1>
 
             <div class="rate-container">
                 <div id="usageBox" class="rate-box">
