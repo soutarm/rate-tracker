@@ -136,6 +136,7 @@ const PLANS = {
     brand: "GloBird ZeroHero",
     pageTitle: "Power Rate Tracker",
     periods: globirdPeriods,
+    supplyCharge: 1.39,
     footnote:
       "Daily supply charge is A$1.39. During ZeroHero time (6-9pm), you can receive a A$1 credit for avoiding grid power."
   },
@@ -144,6 +145,7 @@ const PLANS = {
     brand: "Powershop EV Day",
     pageTitle: "Power Rate Tracker",
     periods: powershopPeriods,
+    supplyCharge: 1.21,
     footnote:
       "Daily supply charge is A$1.21. Controlled load usage is 22.11\u00a2/kWh and is excluded from the $0 Super Off Peak rate. Rates include GST."
   }
@@ -480,6 +482,11 @@ const selectPlan = (planId) => {
   daySegments = buildDaySegments(periods);
   rateAxisMaxCents = computeAxisMax(periods);
   document.title = plan.pageTitle;
+
+  const dailyChargeEl = document.getElementById("dailyCharge");
+  if (dailyChargeEl) {
+    dailyChargeEl.textContent = `Daily Charge: A$${plan.supplyCharge.toFixed(2)}`;
+  }
 
   try {
     window.localStorage.setItem(PLAN_STORAGE_KEY, plan.id);
